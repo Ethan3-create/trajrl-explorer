@@ -1,0 +1,36 @@
+{
+  "input": "C:/Users/PRLOUIS/Desktop/AuthorKit27/TrajRL_reproduction/train/train(1).csv",
+  "outdir": "C:/Users/PRLOUIS/Desktop/trajrl_paper_repro_workdir/outputs/porto_sample1w",
+  "seq_cap": 128,
+  "interval_s": 15.0,
+  "seed": 42,
+  "sample_size": 10000,
+  "stats": {
+    "total_rows_read": 1710670,
+    "dropped_empty_polyline": 5901,
+    "dropped_lt2_points": 30609,
+    "dropped_unparseable": 0,
+    "kept_valid": 1674160,
+    "missing_data_true_total": 8
+  },
+  "sample_stats": {
+    "over_seq_len_count": 273,
+    "missing_data_true_in_sample": 1,
+    "n_points": {
+      "min": 2,
+      "p50": 42,
+      "p90": 82,
+      "max": 1533,
+      "mean": 50.2
+    },
+    "cum_dist_m": {
+      "min": 0.75,
+      "p50": 4038.14,
+      "p90": 11391.76,
+      "max": 252216.19,
+      "mean": 5703.83
+    },
+    "delta_t_inferred": "uniform 15.0s (INFERENCE, not paper ground truth)"
+  },
+  "elapsed_s": 58.6
+}

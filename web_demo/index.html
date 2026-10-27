@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TrajRL Explorer - 多尺度时空轨迹表示学习演示系统</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+</head>
+<body>
+<div id="app">
+  <!-- Header -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo">🚕 TrajRL Explorer</div>
+      <div class="subtitle">多尺度时空轨迹表示学习演示系统</div>
+    </div>
+    <nav class="header-nav">
+      <button class="nav-btn active" data-page="home">🏠 系统介绍</button>
+      <button class="nav-btn" data-page="search">🔍 轨迹检索</button>
+      <button class="nav-btn" data-page="tte">⏱️ 出行时间估计</button>
+      <button class="nav-btn" data-page="augment">🔄 双视图增强</button>
+      <button class="nav-btn" data-page="patches">📊 多尺度编码</button>
+      <button class="nav-btn" data-page="embedding">🔮 Embedding空间</button>
+    </nav>
+  </header>
+
+  <!-- Main Content -->
+  <main id="main-content">
+    <!-- Home Page -->
+    <section id="page-home" class="page active">
+      <div class="hero-section">
+        <h1>TrajRL 轨迹表示学习演示系统</h1>
+        <p class="hero-desc">基于 ICDE 2023 论文 <em>"Self-Supervised Trajectory Representation Learning with Multi-Scale Spatio-Temporal Feature Exploration"</em></p>
+        <div class="stats-bar">
+          <div class="stat-item"><span class="stat-num" id="stat-total">-</span><span class="stat-label">轨迹总数</span></div>
+          <div class="stat-item"><span class="stat-num" id="stat-avg-dist">-</span><span class="stat-label">平均距离(km)</span></div>
+          <div class="stat-item"><span class="stat-num" id="stat-avg-time">-</span><span class="stat-label">平均时长(min)</span></div>
+          <div class="stat-item"><span class="stat-num" id="stat-avg-points">-</span><span class="stat-label">平均点数</span></div>
+        </div>
+      </div>
+
+      <div class="content-grid two-col">
+        <div class="card">
+          <h2>📖 系统概述</h2>
+          <p>本演示系统基于 Porto 城市出租车轨迹数据集（10,000 条样本），展示 TrajRL 论文的核心方法论与实验效果。</p>
+          <p><strong>TrajRL</strong> 是一种自监督轨迹表示学习框架，通过<strong>多尺度时空特征探索</strong>学习通用轨迹嵌入。系统演示了以下核心模块：</p>
+          <ul class="feature-list">
+            <li><strong>轨迹检索</strong> — 基于 KNN 的相似轨迹搜索，对应论文 §V-C3 "Most Similar Trajectory Search"</li>
+            <li><strong>出行时间估计</strong> — 距离-时长线性回归基线，对应论文 §V-C2 "Travel Time Estimation"</li>
+            <li><strong>双视图对比增强</strong> — 路段偏移 + 时间扰动，对应论文 §IV-A、§IV-E2 "Trajectory Augmentation + Contrastive Learning"</li>
+            <li><strong>多尺度编码可视化</strong> — Patch 分块 + InPatch/CrossPatch 层次，对应论文 §IV-D "Multi-Scale Trajectory Encoder"</li>
+            <li><strong>Embedding 空间投影</strong> — PCA 降维展示轨迹分布，对应论文 §V-D 表示质量分析</li>
+          </ul>
+        </div>
+        <div class="card">
+          <h2>🔬 论文核心方法</h2>
+          <div class="method-flow">
+            <div class="flow-step"><div class="flow-num">1</div><div class="flow-text">路网匹配<br><small>Road-network Matching</small></div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step"><div class="flow-num">2</div><div class="flow-text">双视图增强<br><small>Trajectory Augmentation</small></div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step"><div class="flow-num">3</div><div class="flow-text">多尺度编码<br><small>MSTraj Encoder</small></div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step"><div class="flow-num">4</div><div class="flow-text">多面时间编码<br><small>MFTime Encoder</small></div></div>
+            <div class="flow-arrow">→</div>
+            <div class="flow-step"><div class="flow-num">5</div><div class="flow-text">自监督预训练<br><small>Patch Recovery + Contrastive</small></div></div>
+          </div>
+          <p class="method-note"> TrajRL 的两大创新：<strong>多尺度时空编码器</strong>（InPatch GRU + CrossPatch Transformer）和<strong>多面时间编码器</strong>（时间段编码 + 多尺度时间间隔编码）。</p>
+        </div>
+      </div>
+
+      <div class="content-grid three-col">
+        <div class="card paper-ref">
+          <h3>📄 论文引用</h3>
+          <p class="citation">Xia, H., Zhang, X., Cao, Y., et al. "Self-Supervised Trajectory Representation Learning with Multi-Scale Spatio-Temporal Feature Exploration." <em>IEEE ICDE, 2023.</em></p>
+          <p><a href="https://github.com/Xfc30/TrajRL" target="_blank" class="link-btn">🔗 源代码仓库</a></p>
+        </div>
+        <div class="card">
+          <h3>📊 数据集</h3>
+          <p><strong>Porto</strong> 出租车轨迹数据集</p>
+          <p>10,000 条抽样轨迹 | 2013-2014</p>
+          <p>经度范围: -8.7° ~ -8.5° | 纬度范围: 41.0° ~ 41.3°</p>
+        </div>
+        <div class="card">
+          <h3>⚠️ 口径说明</h3>
+          <p>本系统使用简化模型与启发式特征，<strong>不代表论文 SOTA 精度</strong>。</p>
+          <p>出行时间使用推断值（15s 均匀采样），标注为"推断值"。</p>
+          <p>旨在展示方法论思想，非真实复现。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Search Page -->
+    <section id="page-search" class="page">
+      <div class="page-header">
+        <h2>🔍 相似轨迹检索</h2>
+        <p class="page-desc">基于 48 维特征向量（24 点重采样坐标展平）的 KNN 检索。对应论文 §V-C3 "Most Similar Trajectory Search" 与 §IV-D "Multi-Scale Trajectory Encoder" 学到的表示空间。</p>
+      </div>
+      <div class="search-layout">
+        <div class="panel query-panel">
+          <h3>📋 查询列表</h3>
+          <div class="search-controls">
+            <input type="text" id="search-input" placeholder="搜索 Trip ID...">
+            <select id="search-k"><option value="3">Top-3</option><option value="5" selected>Top-5</option><option value="10">Top-10</option></select>
+          </div>
+          <div class="record-list" id="record-list"></div>
+          <div class="pagination" id="pagination"></div>
+        </div>
+        <div class="panel map-panel">
+          <h3>🗺️ 轨迹地图</h3>
+          <div id="search-map" class="map-container"></div>
+          <div class="map-legend">
+            <span class="legend-item"><span class="color-box" style="background:#e74c3c"></span> 查询轨迹</span>
+            <span class="legend-item"><span class="color-box" style="background:#3498db"></span> 相似轨迹 #1</span>
+            <span class="legend-item"><span class="color-box" style="background:#2ecc71"></span> 相似轨迹 #2</span>
+            <span class="legend-item"><span class="color-box" style="background:#f39c12"></span> 相似轨迹 #3+</span>
+          </div>
+        </div>
+        <div class="panel detail-panel">
+          <h3>📊 检索详情</h3>
+          <div id="search-detail" class="detail-content">
+            <div class="empty-state">从左侧选择一条轨迹查看检索结果</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TTE Page -->
+    <section id="page-tte" class="page">
+      <div class="page-header">
+        <h2>⏱️ 出行时间估计</h2>
+        <p class="page-desc">单轨迹出行时间分析：给出一条真实路径，估计其行程耗时（ETA）。对比「仅按距离的线性基线」与「融合路径与时间特征（距离 / 时间步数 / 路径弯曲度）的多元回归」两种预测。对应论文 §IV-C "Multi-faceted Time Encoder" 利用路径与时间多面信息建模的思想。</p>
+      </div>
+      <div class="tte-layout">
+        <div class="panel tte-left-col">
+          <h3>📋 选择轨迹</h3>
+          <div class="record-list compact" id="tte-list"></div>
+          <h3 class="tte-map-title">🗺️ 轨迹路径</h3>
+          <div id="tte-map" class="map-container"></div>
+          <div class="trajectory-info" id="tte-info">从左侧选择一条轨迹，查看路径与出行时间预测</div>
+        </div>
+        <div class="panel tte-right-col">
+          <h3>🔬 预测模型对比（全量样本）</h3>
+          <div id="tte-model-brief" class="model-brief">加载中…</div>
+          <h3>🧬 选中轨迹的路径特征</h3>
+          <div id="tte-features" class="tte-features">-</div>
+          <h3>📊 三种预测结果对比</h3>
+          <div id="tte-cards" class="tte-card-grid">从左侧选择轨迹后展示</div>
+          <div id="tte-chart" class="chart-container tte-chart"></div>
+          <p class="inference-note">⚠️ 真实值使用推断时长（15s 均匀采样近似值），非论文真实训练结果；本页为论文思想演示，不承诺 SOTA 精度。</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Augment Page -->
+    <section id="page-augment" class="page">
+      <div class="page-header">
+        <h2>🔄 双视图对比增强</h2>
+        <p class="page-desc">对应论文 §IV-A "Trajectory Augmentation" 与 §IV-E2 "Trajectory Contrastive Learning"：对同一轨迹生成两个增强视图（路段偏移 + 时间扰动），用于 InfoNCE 对比学习。</p>
+      </div>
+      <div class="augment-layout">
+        <div class="panel">
+          <h3>📋 选择轨迹</h3>
+          <div class="record-list compact" id="augment-list"></div>
+        </div>
+        <div class="panel map-panel">
+          <h3>🗺️ 原始轨迹</h3>
+          <div id="augment-map-orig" class="map-container"></div>
+          <div class="trajectory-info" id="orig-info"></div>
+        </div>
+        <div class="panel map-panel">
+          <h3>🔄 增强视图 A（路段偏移 + 时间扰动）</h3>
+          <div id="augment-map-v1" class="map-container"></div>
+          <div class="trajectory-info" id="v1-info"></div>
+        </div>
+        <div class="panel map-panel">
+          <h3>🔄 增强视图 B（不同随机种子）</h3>
+          <div id="augment-map-v2" class="map-container"></div>
+          <div class="trajectory-info" id="v2-info"></div>
+        </div>
+      </div>
+      <div class="augment-explanation card">
+        <h4>💡 论文方法说明</h4>
+        <p><strong>路段偏移（Road Segment Shifting）</strong>：随机替换部分路段为其 1-hop 或 2-hop 邻居（本系统退化为 GPS 点微小偏移模拟）。</p>
+        <p><strong>时间扰动（Temporal Shifting）</strong>：对时间戳做 -5% ~ +5% 的随机扰动。</p>
+        <p><strong>对比学习信号</strong>：两个增强视图构成正样本对，不同轨迹的视图构成负样本对，通过 InfoNCE 损失拉近正样本、拉远负样本。</p>
+      </div>
+    </section>
+
+    <!-- Patches Page -->
+    <section id="page-patches" class="page">
+      <div class="page-header">
+        <h2>📊 多尺度轨迹编码可视化</h2>
+        <p class="page-desc">对应论文 §IV-D "Multi-Scale Trajectory Encoder"：将轨迹分块（Patch），通过 InPatch GRU 编码块内相关性，通过 CrossPatch Transformer 编码块间相关性。</p>
+      </div>
+      <div class="patches-layout">
+        <div class="panel">
+          <h3>📋 选择轨迹</h3>
+          <div class="record-list compact" id="patch-list"></div>
+        </div>
+        <div class="panel map-panel">
+          <h3>🗺️ 原始轨迹</h3>
+          <div id="patch-map-orig" class="map-container"></div>
+        </div>
+        <div class="panel wide-panel">
+          <h3>📦 Patch 分块可视化 (ω = <span id="patch-omega">4</span>)</h3>
+          <div id="patch-viz" class="patch-viz-container"></div>
+          <div class="patch-controls">
+            <label>窗口大小 ω: <input type="range" id="omega-slider" min="2" max="10" value="4" step="1"></label>
+            <span id="omega-val">4</span>
+          </div>
+        </div>
+      </div>
+      <div class="patches-explanation card">
+        <h4>💡 论文方法说明</h4>
+        <div class="encoder-diagram">
+          <div class="enc-block">
+            <div class="enc-title">Level 1: Patch Partition</div>
+            <div class="enc-desc">将轨迹按窗口 ω 切分为不重叠的 patch<br><code>N = ⌈n / ω⌉</code></div>
+          </div>
+          <div class="enc-arrow">→</div>
+          <div class="enc-block">
+            <div class="enc-title">Level 2: InPatch Encoder (GRU)</div>
+            <div class="enc-desc">捕获 patch 内路段的相关性<br><code>H_i = GRU(X_i, H_0)</code></div>
+          </div>
+          <div class="enc-arrow">→</div>
+          <div class="enc-block">
+            <div class="enc-title">Level 3: CrossPatch Encoder (Transformer)</div>
+            <div class="enc-desc">捕获 patch 之间的相关性<br><code>Z = MultiHeadTransformer(E)</code></div>
+          </div>
+          <div class="enc-arrow">→</div>
+          <div class="enc-block">
+            <div class="enc-title">Level 4: Scale Fusion</div>
+            <div class="enc-desc">多尺度融合得到最终表示<br><code>z = Σ β^(l) · z^(l)</code></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Embedding Page -->
+    <section id="page-embedding" class="page">
+      <div class="page-header">
+        <h2>🔮 Embedding 空间投影</h2>
+        <p class="page-desc">对应论文 §V-D 性能分析：将 48 维特征向量通过 PCA 降维到 2D，可视化轨迹表示空间的分布结构。颜色映射表示行程距离。</p>
+      </div>
+      <div class="embedding-layout">
+        <div class="panel wide-panel">
+          <h3>📊 PCA 降维散点图</h3>
+          <div id="embedding-chart" class="chart-container large"></div>
+          <div class="chart-controls">
+            <label>颜色映射: 
+              <select id="color-map">
+                <option value="cum_dist">行程距离</option>
+                <option value="elapsed">出行时长</option>
+                <option value="n_points">轨迹点数</option>
+              </select>
+            </label>
+          </div>
+        </div>
+        <div class="panel">
+          <h3>📋 点击轨迹查看详情</h3>
+          <div id="emb-detail" class="detail-content">
+            <div class="empty-state">点击散点图上的点查看轨迹详情</div>
+          </div>
+        </div>
+      </div>
+      <div class="embedding-explanation card">
+        <h4>💡 论文方法说明</h4>
+        <p>TrajRL 通过<strong>多尺度时空编码器</strong>将轨迹映射到 d=256 维的表示空间（本系统使用 48 维简化特征）。良好的表示应使相似轨迹在嵌入空间中距离相近。</p>
+        <p>PCA 降维保留了轨迹间的主要方差结构，可用于观察：1) 轨迹是否形成有意义的聚类；2) 距离/时长与嵌入分布的关联。</p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
